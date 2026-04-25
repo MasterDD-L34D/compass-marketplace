@@ -127,7 +127,18 @@ ignore = [
   "build/**",
 ]
 
-# Forward-compat. In v0.1.0 questi campi sono letti ma ignorati.
+# Boot — kickoff direzionale opzionale (v0.2.0+).
+[boot]
+enabled = true                   # SessionStart hook injects mini-brief?
+                                 # default true. False = hook silenzioso.
+delegate_claude_md = false       # se true e claude-md-management è
+                                 # installato, boot suggerisce di
+                                 # invocarlo quando il CLAUDE.md è stale.
+escape_env = "COMPASS_SKIP_BOOT" # nome env var che disabilita il hook
+                                 # per la sessione corrente (qualsiasi
+                                 # valore non vuoto skippa).
+
+# Forward-compat. v0.1.0+ legge ma ignora.
 [evolve]
 enabled = false                  # v0.4.0
 

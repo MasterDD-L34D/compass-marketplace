@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "compass",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Direction-first audit lens for Claude Code projects. Measures how well recent work serves the project's pillars, surfaces drift, and runs adaptive kickoff protocols. Composes with claude-md-management, doctor-skill, and audit-project rather than duplicating them.",
   "author": {
     "name": "MasterDD-L34D"

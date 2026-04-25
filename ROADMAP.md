@@ -55,13 +55,16 @@ produce un briefing sotto i 60 secondi con numeri reali.
 
 **Scope:** il comando di apertura sessione.
 
-- [ ] `/compass:boot` — sostituisce il vecchio `/kickoff` con una versione
+- [x] `/compass:boot` — sostituisce il vecchio `/kickoff` con una versione
       direction-aware
-- [ ] SessionStart hook opzionale, che inietta un mini-brief (3–5 righe)
+- [x] SessionStart hook opzionale, che inietta un mini-brief (3–5 righe)
       all'apertura di ogni sessione
-- [ ] Integrazione **opzionale** con `claude-md-management`: se installato
+- [x] Integrazione **opzionale** con `claude-md-management`: se installato
       e se `.compass.toml` lo permette, `boot` può chiederne l'invocazione
-- [ ] Escape hatch `skip boot` rispettato
+      (hint emesso quando `boot.delegate_claude_md = true` + `CLAUDE.md`
+      esiste; nessuna invocazione automatica)
+- [x] Escape hatch `skip boot` rispettato (`COMPASS_SKIP_BOOT=1` env var
+      o `boot.enabled = false`)
 
 **Criterio di done:** aprire una sessione dentro un progetto con Compass
 installato produce automaticamente un micro-brief di direzione. L'utente

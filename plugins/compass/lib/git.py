@@ -68,35 +68,16 @@ def recent_commits(repo: Path, window: int) -> list[dict[str, Any]]:
 
 
 def issues_summary(repo: Path, window_days: int) -> dict[str, int] | None:
-    """Use `gh issue list` to count open + recently closed issues.
-
-    Returns None if `gh` is missing or fails (caller falls back to neutral).
-    """
-    try:
-        open_out = subprocess.run(
-            ["gh", "issue", "list", "--state", "open", "--limit", "500",
-             "--json", "number"],
-            cwd=repo, check=True, capture_output=True, text=True,
-        )
-        closed_out = subprocess.run(
-            ["gh", "issue", "list", "--state", "closed", "--limit", "500",
-             "--search", f"closed:>={_iso_days_ago(window_days)}",
-             "--json", "number"],
-            cwd=repo, check=True, capture_output=True, text=True,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return None
+    """`gh issue list` count of open + closed-in-window. None if `gh` missing/fails."""
     import json
-    try:
-        n_open = len(json.loads(open_out.stdout))
-        n_closed = len(json.loads(closed_out.stdout))
-    except (ValueError, TypeError):
-        return None
-    return {"open": n_open, "closed": n_closed}
-
-
-def _iso_days_ago(days: int) -> str:
-    """ISO date `days` ago, format YYYY-MM-DD."""
     from datetime import datetime, timedelta, timezone
-    d = datetime.now(timezone.utc) - timedelta(days=days)
-    return d.strftime("%Y-%m-%d")
+    since = (datetime.now(timezone.utc) - timedelta(days=window_days)).strftime("%Y-%m-%d")
+    base = ["gh", "issue", "list", "--limit", "500", "--json", "number"]
+    try:
+        op = subprocess.run([*base, "--state", "open"], cwd=repo, check=True,
+                            capture_output=True, text=True)
+        cl = subprocess.run([*base, "--state", "closed", "--search", f"closed:>={since}"],
+                            cwd=repo, check=True, capture_output=True, text=True)
+        return {"open": len(json.loads(op.stdout)), "closed": len(json.loads(cl.stdout))}
+    except (FileNotFoundError, subprocess.CalledProcessError, ValueError, TypeError):
+        return None

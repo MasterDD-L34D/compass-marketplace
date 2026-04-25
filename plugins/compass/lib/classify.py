@@ -1,4 +1,4 @@
-"""Classify files and commits against pillars + categories. Spec: docs/config.md §5-§6."""
+"""Classify files and commits. Spec: docs/config.md §5-§6."""
 from __future__ import annotations
 
 import fnmatch
