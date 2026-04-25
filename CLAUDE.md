@@ -29,7 +29,9 @@ chiedi all'utente.
 
 ## Stack & comandi
 
-- **Linguaggio**: Python 3.8+ (stdlib only — niente pip install)
+- **Linguaggio**: Python 3.11+ (stdlib only — niente pip install).
+  Il bump a 3.11 è richiesto per `tomllib` (parser TOML stdlib, usato per
+  `.compass.toml`). Vedi `docs/config.md` §7.
 - **Formato**: Claude Code plugin spec (vedi `.claude-plugin/`)
 - **Test**: `pytest` se introdotto, `python3 -m unittest` come fallback
 - **Lint**: nessun linter forzato. Se serve: `ruff check` (opzionale)
@@ -46,7 +48,7 @@ python3 -m json.tool plugins/compass/.claude-plugin/plugin.json
 
 ## Architettura — i 3 primitivi
 
-1. **Pillars** — file `.compass.yaml` nella root del progetto utente, dichiara
+1. **Pillars** — file `.compass.toml` nella root del progetto utente, dichiara
    3–5 cose che contano. Schema in `docs/config.md` (da scrivere v0.1.0).
 2. **Direction Index** — numero 0–100. Pesato su % commit Core, copertura
    pilastri, issue chiuse.
@@ -105,7 +107,7 @@ Scope tipici: `init`, `check`, `boot`, `drift`, `evolve`, `marketplace`,
 
 Chiedi sempre prima di:
 - Aggiungere una dipendenza esterna
-- Modificare lo schema di `.compass.yaml`
+- Modificare lo schema di `.compass.toml`
 - Creare un nuovo command top-level
 - Modificare README/VISION/ROADMAP (sono fonti di verità)
 - Pushare su `main` (preferisci branch + chiedi review)

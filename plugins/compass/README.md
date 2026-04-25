@@ -21,15 +21,16 @@ See [ROADMAP.md](../../ROADMAP.md) for milestones.
 
 ## Components (target, not yet shipped)
 
-- `commands/` — slash commands (`/compass init|check|boot|drift|evolve`)
+- `skills/` — slash commands implemented as `SKILL.md` (namespaced
+  `/compass:init|check|boot|drift|evolve`) + auto-invoked lens skills
+- `scripts/` — Python helpers invoked via shell from skill bodies
 - `agents/` — subagents for drift classification and evolve proposals
-- `skills/` — auto-invoked lens skills
 - `hooks/` — optional `SessionStart` brief injection
 
 ## Config file
 
-Projects opt in by creating `.compass.yaml` at their root. See
-`docs/config.md` (planned v0.1.0) for the schema.
+Projects opt in by creating `.compass.toml` at their root. See
+[`docs/config.md`](../../docs/config.md) for the schema.
 
 ## License
 
