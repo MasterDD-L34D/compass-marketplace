@@ -13,7 +13,8 @@ class GitError(RuntimeError):
 def _run(args: list[str], cwd: Path) -> str:
     try:
         out = subprocess.run(
-            ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
+            ["git", *args], cwd=cwd, check=True, capture_output=True,
+            text=True, encoding="utf-8", errors="replace",
         )
     except FileNotFoundError as e:
         raise GitError("git CLI not found in PATH") from e
@@ -73,11 +74,11 @@ def issues_summary(repo: Path, window_days: int) -> dict[str, int] | None:
     from datetime import datetime, timedelta, timezone
     since = (datetime.now(timezone.utc) - timedelta(days=window_days)).strftime("%Y-%m-%d")
     base = ["gh", "issue", "list", "--limit", "500", "--json", "number"]
+    kw = dict(cwd=repo, check=True, capture_output=True, text=True,
+              encoding="utf-8", errors="replace")
     try:
-        op = subprocess.run([*base, "--state", "open"], cwd=repo, check=True,
-                            capture_output=True, text=True)
-        cl = subprocess.run([*base, "--state", "closed", "--search", f"closed:>={since}"],
-                            cwd=repo, check=True, capture_output=True, text=True)
+        op = subprocess.run([*base, "--state", "open"], **kw)
+        cl = subprocess.run([*base, "--state", "closed", "--search", f"closed:>={since}"], **kw)
         return {"open": len(json.loads(op.stdout)), "closed": len(json.loads(cl.stdout))}
     except (FileNotFoundError, subprocess.CalledProcessError, ValueError, TypeError):
         return None
