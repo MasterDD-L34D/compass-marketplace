@@ -1,8 +1,6 @@
-"""Load, validate, default-fill .compass.toml. Spec: docs/config.md."""
+"""Load + validate + default-fill .compass.toml. Spec: docs/config.md."""
 from __future__ import annotations
-
-import re
-import tomllib
+import re, tomllib
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +31,8 @@ DEFAULTS: dict[str, Any] = {
     "issues": {"enabled": False, "closed_window_days": 30},
     "ignore": [".git/**", "node_modules/**", "**/__pycache__/**",
                "*.lock", "dist/**", "build/**"],
+    "boot": {"enabled": True, "delegate_claude_md": False,
+             "escape_env": "COMPASS_SKIP_BOOT"},
     "evolve": {"enabled": False},
     "delegate_to": [],
 }
@@ -49,9 +49,7 @@ def load(path: Path) -> dict[str, Any]:
             raw = tomllib.load(f)
     except tomllib.TOMLDecodeError as e:
         raise ConfigError(f"{path}: TOML parse error: {e}") from e
-    cfg = _merge_defaults(raw)
-    _validate(cfg, path)
-    return cfg
+    cfg = _merge_defaults(raw); _validate(cfg, path); return cfg
 
 
 def _merge_defaults(raw: dict[str, Any]) -> dict[str, Any]:
@@ -62,6 +60,7 @@ def _merge_defaults(raw: dict[str, Any]) -> dict[str, Any]:
         "direction": _deep_merge(DEFAULTS["direction"], raw.get("direction", {})),
         "issues": {**DEFAULTS["issues"], **raw.get("issues", {})},
         "ignore": list(raw.get("ignore", DEFAULTS["ignore"])),
+        "boot": {**DEFAULTS["boot"], **raw.get("boot", {})},
         "evolve": {**DEFAULTS["evolve"], **raw.get("evolve", {})},
         "delegate_to": list(raw.get("delegate_to", [])),
         "categories": {},
@@ -80,10 +79,7 @@ def _merge_defaults(raw: dict[str, Any]) -> dict[str, Any]:
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     out = dict(base)
     for k, v in override.items():
-        if isinstance(v, dict) and isinstance(out.get(k), dict):
-            out[k] = _deep_merge(out[k], v)
-        else:
-            out[k] = v
+        out[k] = _deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
     return out
 
 
@@ -141,10 +137,10 @@ def _validate(cfg: dict[str, Any], path: Path) -> None:
 
 
 def find_config(start: Path) -> Path | None:
-    """Walk up from start looking for .compass.toml. Returns path or None."""
+    """Walk up from start looking for .compass.toml."""
     cur = start.resolve()
     for parent in (cur, *cur.parents):
-        candidate = parent / ".compass.toml"
-        if candidate.exists():
-            return candidate
+        c = parent / ".compass.toml"
+        if c.exists():
+            return c
     return None

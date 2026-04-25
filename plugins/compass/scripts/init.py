@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
-"""Helpers for /compass:init. Two subcommands:
-  inspect              Print JSON summary of the current repo (top-dirs,
-                       README presence, detected language hints, project
-                       type guess, suggested pillars).
-  write <toml-file>    Validate the proposed TOML config and write it to
-                       .compass.toml at the repo root. Emits OK/ERROR.
-
-The interactive Q&A is driven by Claude reading inspect output and
-proposing pillars to the user; this script is a pure utility."""
+"""Helpers for /compass:init. Subcommands: inspect | write <toml-file>.
+The interactive Q&A is driven by Claude reading inspect output;
+this script is a pure utility."""
 from __future__ import annotations
 
 import json
@@ -34,34 +28,23 @@ PROJECT_TYPE_BY_SIGNALS: list[tuple[str, list[str]]] = [
     ("docs",     ["mkdocs.yml", "docusaurus.config.js", "_config.yml", "book.toml"]),
 ]
 
-# (id, name, paths) tuples per project type. Pillars whose paths don't match
-# anything in repo are dropped at suggestion time.
+# Pillars whose paths don't match anything in repo are dropped at suggest time.
 DEFAULT_PILLAR_TEMPLATES: dict[str, list[tuple[str, str, list[str]]]] = {
-    "game-dev": [
-        ("gameplay-core", "Gameplay & feel", ["src/game/**", "scenes/**", "assets/**"]),
-        ("balance-data", "Balance & data", ["data/**", "balance/**"]),
-        ("tactics-readability", "Lettura tattica UI", ["ui/**", "hud/**"]),
-    ],
-    "web-saas": [
-        ("core-funnel", "Core funnel", ["app/(main)/**", "src/pages/**"]),
-        ("perf-reliability", "Performance & reliability", ["src/lib/**", "src/server/**"]),
-        ("onboarding", "Onboarding", ["src/onboarding/**", "app/(onboarding)/**"]),
-    ],
-    "library": [
-        ("api-stability", "API stability", ["src/**", "lib/**"]),
-        ("examples", "Examples & docs", ["examples/**", "docs/**"]),
-        ("compat-perf", "Compatibility & perf", ["benches/**", "tests/perf/**"]),
-    ],
-    "research": [
-        ("experiments", "Experiments", ["experiments/**", "notebooks/**"]),
-        ("writeup", "Writeup & figures", ["paper/**", "figures/**"]),
-        ("reproducibility", "Reproducibility", ["env/**", "scripts/**"]),
-    ],
-    "docs": [
-        ("content", "Content", ["docs/**", "src/**"]),
-        ("navigation", "Navigation & IA", ["mkdocs.yml", "_config.yml", "sidebars.*"]),
-    ],
-    "other": [("core", "Core", ["src/**"])],
+    "game-dev": [("gameplay-core", "Gameplay & feel", ["src/game/**", "scenes/**", "assets/**"]),
+                 ("balance-data", "Balance & data", ["data/**", "balance/**"]),
+                 ("tactics-readability", "Lettura tattica UI", ["ui/**", "hud/**"])],
+    "web-saas": [("core-funnel", "Core funnel", ["app/(main)/**", "src/pages/**"]),
+                 ("perf-reliability", "Performance & reliability", ["src/lib/**", "src/server/**"]),
+                 ("onboarding", "Onboarding", ["src/onboarding/**", "app/(onboarding)/**"])],
+    "library":  [("api-stability", "API stability", ["src/**", "lib/**"]),
+                 ("examples", "Examples & docs", ["examples/**", "docs/**"]),
+                 ("compat-perf", "Compatibility & perf", ["benches/**", "tests/perf/**"])],
+    "research": [("experiments", "Experiments", ["experiments/**", "notebooks/**"]),
+                 ("writeup", "Writeup & figures", ["paper/**", "figures/**"]),
+                 ("reproducibility", "Reproducibility", ["env/**", "scripts/**"])],
+    "docs":     [("content", "Content", ["docs/**", "src/**"]),
+                 ("navigation", "Navigation & IA", ["mkdocs.yml", "_config.yml", "sidebars.*"])],
+    "other":    [("core", "Core", ["src/**"])],
 }
 
 
@@ -108,11 +91,8 @@ def _suggest_pillars(repo: Path, ptype: str) -> list[dict]:
 
 
 def _has_match(repo: Path, pattern: str) -> bool:
-    """Cheap check: does any path in repo match this glob? Uses pathlib.glob."""
     try:
-        # pathlib doesn't support ** without recursive flag; substitute.
-        pat = pattern.replace("**", "*")
-        return any(True for _ in repo.glob(pat))
+        return any(True for _ in repo.glob(pattern.replace("**", "*")))
     except (OSError, ValueError):
         return False
 
@@ -122,19 +102,15 @@ def cmd_inspect(repo_arg: str | None) -> int:
     try:
         repo = gitmod.repo_root(cwd)
     except gitmod.GitError as e:
-        print(json.dumps({"error": str(e)}))
-        return 2
+        print(json.dumps({"error": str(e)})); return 2
     ptype = _detect_project_type(repo)
-    info = {
-        "repo_root": str(repo),
-        "name": repo.name,
-        "project_type": ptype,
+    print(json.dumps({
+        "repo_root": str(repo), "name": repo.name, "project_type": ptype,
         "top_dirs": _top_dirs(repo),
         "has_readme": any((repo / n).exists() for n in ("README.md", "readme.md", "README.rst")),
         "has_existing_config": (repo / ".compass.toml").exists(),
         "suggested_pillars": _suggest_pillars(repo, ptype),
-    }
-    print(json.dumps(info, indent=2, ensure_ascii=False))
+    }, indent=2, ensure_ascii=False))
     return 0
 
 
@@ -145,14 +121,12 @@ def cmd_write(toml_file: str) -> int:
     try:
         with src.open("rb") as f:
             tomllib.load(f)
+        cfg = cfgmod.load(src)
+        repo = gitmod.repo_root(Path.cwd())
     except tomllib.TOMLDecodeError as e:
         print(f"ERROR: invalid TOML: {e}", file=sys.stderr); return 3
-    try:
-        cfg = cfgmod.load(src)
     except cfgmod.ConfigError as e:
         print(f"ERROR: schema validation failed: {e}", file=sys.stderr); return 4
-    try:
-        repo = gitmod.repo_root(Path.cwd())
     except gitmod.GitError as e:
         print(f"ERROR: {e}", file=sys.stderr); return 5
     dst = repo / ".compass.toml"
@@ -165,14 +139,11 @@ def cmd_write(toml_file: str) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if not argv:
-        print("usage: init.py inspect [REPO] | write TOMLFILE", file=sys.stderr); return 1
-    sub = argv[0]
-    if sub == "inspect":
+    if argv and argv[0] == "inspect":
         return cmd_inspect(argv[1] if len(argv) > 1 else None)
-    if sub == "write" and len(argv) >= 2:
+    if len(argv) >= 2 and argv[0] == "write":
         return cmd_write(argv[1])
-    print(f"ERROR: unknown or malformed subcommand {sub!r}", file=sys.stderr)
+    print("usage: init.py inspect [REPO] | write TOMLFILE", file=sys.stderr)
     return 1
 
 

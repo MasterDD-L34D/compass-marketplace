@@ -17,14 +17,15 @@ Composes with other audit plugins instead of duplicating them.
 
 ## Status
 
-**v0.1.0 — MVP "Pillars & Direction"**. Two slash commands shipped:
+**v0.2.0 — "Boot"**. Three slash commands + SessionStart hook:
 
 - `/compass:init` — interactive setup of `.compass.toml`
-- `/compass:check` — Direction Index + pillar coverage + drift signals
+- `/compass:check` — full Direction Index briefing
+- `/compass:boot` — 3-line mini-brief for kickoff
+- `SessionStart` hook — auto mini-brief on session open (opt-out via
+  `boot.enabled = false` or `COMPASS_SKIP_BOOT=1`)
 
-Plus an auto-invoked skill `/compass:lens` that runs `check` when the
-user asks "where am I going" / "am I on track" / "sono sulla strada
-giusta".
+Plus auto-invoked skill `/compass:lens` for "am I on track" queries.
 
 ## Commands
 
@@ -53,6 +54,29 @@ your pillars, computes the **Direction Index** with the formula in
 
 Runs `scripts/check.py`.
 
+### `/compass:boot`
+
+Direction-aware kickoff. Same data as `/compass:check`, condensed to
+3-5 lines:
+
+```
+🟢 Compass — DI 88/100 (rotta coerente) · pilastri 3/3 · window 30 commit
+⚠ <top drift signal, if any>
+→ <next smallest step, if applicable>
+```
+
+Wired to a `SessionStart` hook (`hooks/hooks.json`) that runs the same
+brief automatically on session open. The hook is silent (exit 0, no
+output) when:
+
+- the project hasn't opted in (no `.compass.toml`)
+- `boot.enabled = false` in config
+- `COMPASS_SKIP_BOOT` (or whatever `boot.escape_env` names) is set
+
+If `boot.delegate_claude_md = true` and `CLAUDE.md` exists, the brief
+includes a one-line hint suggesting `/claude-md:audit` (delegation,
+not duplication — see `claude-md-management` plugin).
+
 ### `/compass:lens` (auto-invoked skill)
 
 Triggered by phrases like "am I on track", "where am I going", "check
@@ -63,12 +87,14 @@ verbatim.
 
 - `skills/compass-init/SKILL.md` — `/compass:init`
 - `skills/compass-check/SKILL.md` — `/compass:check`
+- `skills/compass-boot/SKILL.md` — `/compass:boot`
 - `skills/compass-lens/SKILL.md` — auto-invoked lens
-- `scripts/check.py`, `scripts/init.py` — Python entry points called
-  from skills via shell injection
-- `lib/` — internal modules (config parser, classifier, git reader,
-  direction calculator, briefing renderer)
-- `agents/`, `hooks/` — empty, reserved for v0.2.0+
+- `scripts/{check,boot,init}.py` — Python entry points called from
+  skills via shell injection (`${CLAUDE_PLUGIN_ROOT}/scripts/...`)
+- `hooks/hooks.json` — `SessionStart` hook → `boot.py --hook`
+- `lib/` — config parser, classifier, git reader, direction calculator,
+  briefing renderer, runtime helpers
+- `agents/` — empty, reserved for v0.4.0+
 
 ## Config file
 

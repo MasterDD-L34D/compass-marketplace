@@ -100,15 +100,12 @@ def drift_signals(result: DirectionResult, commits: list[CommitHit],
 
 
 def next_smallest_step(result: DirectionResult, cfg: dict[str, Any]) -> str | None:
-    """Suggest a single concrete next action, smallest possible."""
     untouched = [pid for pid, n in result.pillars_touched.items() if n == 0]
     if untouched:
-        pid = untouched[0]
         for p in cfg["pillars"]:
-            if p["id"] == pid:
-                paths = p.get("paths") or []
-                hint = paths[0] if paths else "(no paths declared)"
-                return (f"Apri un commit su `{pid}`. Path più promettente: `{hint}`.")
+            if p["id"] == untouched[0]:
+                hint = (p.get("paths") or ["(no paths declared)"])[0]
+                return f"Apri un commit su `{untouched[0]}`. Path più promettente: `{hint}`."
     if result.core_share < 0.3 and result.window >= 5:
         return "Prossimo commit: tocca un file dentro un pilastro dichiarato."
     return None
