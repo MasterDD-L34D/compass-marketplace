@@ -18,6 +18,10 @@ from lib import config as cfgmod  # noqa: E402
 from lib import git as gitmod     # noqa: E402
 
 PROJECT_TYPE_BY_SIGNALS: list[tuple[str, list[str]]] = [
+    ("multi-agent", ["agents/", "camel-agents/", "crewai/", "autogen/",
+                     "SWARM-PILLARS.md", "MEMORY-SHARED.md", "cycle-log.md",
+                     "requirements.txt:crewai", "requirements.txt:autogen",
+                     "pyproject.toml:camel", "package.json:autogen"]),
     ("game-dev", ["assets", "scenes", "godot.project", "Game.uproject", "ProjectSettings/",
                   "package.json:phaser", "Cargo.toml:bevy"]),
     ("web-saas", ["next.config.js", "next.config.ts", "remix.config.js",
@@ -43,6 +47,11 @@ DEFAULT_PILLAR_TEMPLATES: dict[str, list[tuple[str, str, list[str]]]] = {
                  ("reproducibility", "Reproducibility", ["env/**", "scripts/**"])],
     "docs":     [("content", "Content", ["docs/**", "src/**"]),
                  ("navigation", "Navigation & IA", ["mkdocs.yml", "_config.yml", "sidebars.*"])],
+    "multi-agent": [
+        ("agent-identity", "Identity & profiles", ["agents/**/IDENTITY*", "MANIFEST.md"]),
+        ("orchestration", "Coordination & handoffs", ["**/orchestrator*", "**/swarm_loop*", "contracts/**"]),
+        ("shared-memory", "Memory & lessons", ["MEMORY-SHARED*", "logs/**", "cycle-log*"]),
+    ],
     "other":    [("core", "Core", ["src/**"])],
 }
 
