@@ -102,13 +102,20 @@ chiaro + il next-action più piccolo.
 
 **Scope:** il feedback loop dai transcript.
 
-- [ ] Lettura di `~/.claude/projects/**/*.jsonl` filtrando per progetto corrente
-- [ ] Statistiche: quante volte ogni task del boot è stato eseguito, quante
-      volte ha trovato qualcosa, quante volte è stato skippato
-- [ ] `/compass:evolve` — presenta un **diff proposto** al `.compass.toml`
-      basato sui pattern osservati
+- [x] Lettura di `~/.claude/projects/**/*.jsonl` filtrando per progetto corrente
+      (path discovery via `find_transcript_dir`, fallback su sostring match)
+- [x] Statistiche: counts per pilastro + sessioni totali + menzioni
+      `compass`. **Privacy-first**: solo counts, nessun contenuto estratto.
+      *Boot-task hit/skip rate rinviato a v0.5.0+ (richiede tracking
+      strutturato lato hook, non solo log).*
+- [x] `/compass:evolve` — proposte testuali (kind: drop_pillar /
+      boost_weight / add_paths_hint / noop). *Diff TOML rinviato a
+      v0.5.0+ per evitare di scrivere TOML serializer custom (~50 LOC
+      che spingerebbero il budget oltre 1000).*
 - [ ] L'utente approva in modalità chirurgica (accept, reject, modify)
-- [ ] Mai applicare modifiche senza consenso esplicito
+      *(v0.5.0+: richiede TOML writer + flusso `--apply`)*
+- [x] Mai applicare modifiche senza consenso esplicito (no auto-apply
+      in v0.4.0; user edita a mano dopo aver letto le proposte)
 
 **Criterio di done:** dopo 10+ sessioni su un progetto, `evolve` propone
 almeno 1-2 modifiche sensate al file di config.
