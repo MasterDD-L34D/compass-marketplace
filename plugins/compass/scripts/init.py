@@ -18,12 +18,11 @@ from lib import config as cfgmod  # noqa: E402
 from lib import git as gitmod     # noqa: E402
 
 PROJECT_TYPE_BY_SIGNALS: list[tuple[str, list[str]]] = [
-    ("game-dev", ["assets", "scenes", "godot.project", "Game.uproject",
-                  "ProjectSettings/", "package.json:phaser", "Cargo.toml:bevy"]),
+    ("game-dev", ["assets", "scenes", "godot.project", "Game.uproject", "ProjectSettings/",
+                  "package.json:phaser", "Cargo.toml:bevy"]),
     ("web-saas", ["next.config.js", "next.config.ts", "remix.config.js",
                   "package.json:next", "package.json:remix"]),
-    ("library",  ["pyproject.toml", "setup.py", "Cargo.toml",
-                  "package.json:main", "go.mod"]),
+    ("library",  ["pyproject.toml", "setup.py", "Cargo.toml", "package.json:main", "go.mod"]),
     ("research", ["notebooks/", "*.ipynb", "data/raw/", "experiments/"]),
     ("docs",     ["mkdocs.yml", "docusaurus.config.js", "_config.yml", "book.toml"]),
 ]
@@ -49,18 +48,15 @@ DEFAULT_PILLAR_TEMPLATES: dict[str, list[tuple[str, str, list[str]]]] = {
 
 
 def _signal_match(repo: Path, sig: str) -> bool:
-    if ":" in sig:
-        fname, needle = sig.split(":", 1)
-        f = repo / fname
-        try:
-            return f.exists() and needle in f.read_text(encoding="utf-8", errors="ignore")
-        except OSError:
-            return False
-    if "*" in sig or "?" in sig:
-        return bool(list(repo.glob(sig)))
-    if sig.endswith("/"):
-        return (repo / sig.rstrip("/")).is_dir()
-    return (repo / sig).exists()
+    try:
+        if ":" in sig:
+            f, n = sig.split(":", 1); p = repo / f
+            return p.exists() and n in p.read_text(encoding="utf-8", errors="ignore")
+        if "*" in sig or "?" in sig: return bool(list(repo.glob(sig)))
+        if sig.endswith("/"): return (repo / sig.rstrip("/")).is_dir()
+        return (repo / sig).exists()
+    except OSError:
+        return False
 
 
 def _detect_project_type(repo: Path) -> str:

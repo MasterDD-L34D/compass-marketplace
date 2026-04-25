@@ -17,15 +17,20 @@ Composes with other audit plugins instead of duplicating them.
 
 ## Status
 
-**v0.2.0 — "Boot"**. Three slash commands + SessionStart hook:
+**v0.3.0 — "Drift"**. Four slash commands + SessionStart hook:
 
 - `/compass:init` — interactive setup of `.compass.toml`
 - `/compass:check` — full Direction Index briefing
 - `/compass:boot` — 3-line mini-brief for kickoff
+- `/compass:drift` — focused drift report with warning gate
 - `SessionStart` hook — auto mini-brief on session open (opt-out via
   `boot.enabled = false` or `COMPASS_SKIP_BOOT=1`)
 
 Plus auto-invoked skill `/compass:lens` for "am I on track" queries.
+
+Classifier improvements (v0.3.0): hybrid path + message prefix + body
+keywords (per-category `body_keywords` list). Recency drift signal:
+flags when last commit on a pillar is older than `drift.recency_days`.
 
 ## Commands
 
@@ -77,6 +82,33 @@ If `boot.delegate_claude_md = true` and `CLAUDE.md` exists, the brief
 includes a one-line hint suggesting `/claude-md:audit` (delegation,
 not duplication — see `claude-md-management` plugin).
 
+### `/compass:drift`
+
+Focused drift slice. Same data as `/compass:check` but only the drift
+section + a hard warning gate when DI is below `drift.warning_threshold`
+(default 50). Useful when you want "what's pulling me away" without the
+full breakdown table.
+
+Output structure:
+
+```
+# Compass — Drift report
+
+⚠ DRIFT WARNING · DI 38 < soglia 50    (or ✓ if above)
+
+## Segnali rilevati
+1. <signal 1>
+2. <signal 2>
+...
+
+## Prossimo passo di riallineamento
+<smallest concrete next action>
+```
+
+Up to 5 ranked drift signals (vs. 3 in `/compass:check`). Includes the
+v0.3.0 recency signal: "ultimo commit core N giorni fa (soglia drift
+Mgg)" using `drift.recency_days`.
+
 ### `/compass:lens` (auto-invoked skill)
 
 Triggered by phrases like "am I on track", "where am I going", "check
@@ -88,8 +120,9 @@ verbatim.
 - `skills/compass-init/SKILL.md` — `/compass:init`
 - `skills/compass-check/SKILL.md` — `/compass:check`
 - `skills/compass-boot/SKILL.md` — `/compass:boot`
+- `skills/compass-drift/SKILL.md` — `/compass:drift`
 - `skills/compass-lens/SKILL.md` — auto-invoked lens
-- `scripts/{check,boot,init}.py` — Python entry points called from
+- `scripts/{check,boot,drift,init}.py` — Python entry points called from
   skills via shell injection (`${CLAUDE_PLUGIN_ROOT}/scripts/...`)
 - `hooks/hooks.json` — `SessionStart` hook → `boot.py --hook`
 - `lib/` — config parser, classifier, git reader, direction calculator,

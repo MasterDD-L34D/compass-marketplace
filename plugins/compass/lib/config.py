@@ -23,7 +23,8 @@ _CAT_DEFAULTS = (
 )
 DEFAULTS: dict[str, Any] = {
     "project": {"name": None, "type": "other"},
-    "categories": {n: {"paths": p, "weight": w, "message_patterns": []}
+    "categories": {n: {"paths": p, "weight": w,
+                       "message_patterns": [], "body_keywords": []}
                    for n, p, w in _CAT_DEFAULTS},
     "direction": {"window": 30,
                   "formula": {"core_share": 0.4, "pillar_coverage": 0.4, "issue_factor": 0.2},
@@ -33,6 +34,7 @@ DEFAULTS: dict[str, Any] = {
                "*.lock", "dist/**", "build/**"],
     "boot": {"enabled": True, "delegate_claude_md": False,
              "escape_env": "COMPASS_SKIP_BOOT"},
+    "drift": {"warning_threshold": 50, "recency_days": 7},
     "evolve": {"enabled": False},
     "delegate_to": [],
 }
@@ -61,17 +63,19 @@ def _merge_defaults(raw: dict[str, Any]) -> dict[str, Any]:
         "issues": {**DEFAULTS["issues"], **raw.get("issues", {})},
         "ignore": list(raw.get("ignore", DEFAULTS["ignore"])),
         "boot": {**DEFAULTS["boot"], **raw.get("boot", {})},
+        "drift": {**DEFAULTS["drift"], **raw.get("drift", {})},
         "evolve": {**DEFAULTS["evolve"], **raw.get("evolve", {})},
         "delegate_to": list(raw.get("delegate_to", [])),
         "categories": {},
     }
     raw_cats = raw.get("categories", {})
     for name, default in DEFAULTS["categories"].items():
-        user = raw_cats.get(name, {})
+        u = raw_cats.get(name, {})
         out["categories"][name] = {
-            "paths": list(user.get("paths", default["paths"])),
-            "weight": float(user.get("weight", default["weight"])),
-            "message_patterns": list(user.get("message_patterns", default["message_patterns"])),
+            "paths": list(u.get("paths", default["paths"])),
+            "weight": float(u.get("weight", default["weight"])),
+            "message_patterns": list(u.get("message_patterns", default["message_patterns"])),
+            "body_keywords": list(u.get("body_keywords", default["body_keywords"])),
         }
     return out
 
@@ -88,52 +92,45 @@ def _err(path: Path, msg: str) -> None:
 
 
 def _validate(cfg: dict[str, Any], path: Path) -> None:
+    E = lambda m: _err(path, m)  # noqa: E731
     if cfg.get("version") != SCHEMA_VERSION:
-        _err(path, f"version must be {SCHEMA_VERSION} (got {cfg.get('version')!r})")
+        E(f"version must be {SCHEMA_VERSION} (got {cfg.get('version')!r})")
     pillars = cfg["pillars"]
     if not isinstance(pillars, list) or not 1 <= len(pillars) <= 10:
-        _err(path, f"pillars must be 1..10 entries (got {len(pillars)})")
+        E(f"pillars must be 1..10 entries (got {len(pillars)})")
     seen: set[str] = set()
     for i, p in enumerate(pillars):
-        if not isinstance(p, dict):
-            _err(path, f"pillars[{i}] must be a table")
+        if not isinstance(p, dict): E(f"pillars[{i}] must be a table")
         pid = p.get("id", "")
         if not isinstance(pid, str) or not PILLAR_ID_RE.match(pid):
-            _err(path, f"pillars[{i}].id invalid kebab-case: {pid!r}")
-        if pid in seen:
-            _err(path, f"pillars[{i}].id duplicate: {pid!r}")
+            E(f"pillars[{i}].id invalid kebab-case: {pid!r}")
+        if pid in seen: E(f"pillars[{i}].id duplicate: {pid!r}")
         seen.add(pid)
         paths = p.get("paths", [])
         if not isinstance(paths, list) or not paths or not all(isinstance(x, str) and x for x in paths):
-            _err(path, f"pillars[{i}].paths must be non-empty list of strings")
+            E(f"pillars[{i}].paths must be non-empty list of strings")
         w = p.get("weight", 1.0)
         if not isinstance(w, (int, float)) or not 0.0 <= w <= 10.0:
-            _err(path, f"pillars[{i}].weight out of [0.0, 10.0]: {w!r}")
-        p["weight"] = float(w)
-        p.setdefault("name", pid)
-        p.setdefault("description", "")
-    ptype = cfg["project"].get("type", "other")
-    if ptype not in VALID_PROJECT_TYPES:
-        _err(path, f"project.type invalid: {ptype!r}")
+            E(f"pillars[{i}].weight out of [0.0, 10.0]: {w!r}")
+        p["weight"] = float(w); p.setdefault("name", pid); p.setdefault("description", "")
+    if cfg["project"].get("type", "other") not in VALID_PROJECT_TYPES:
+        E(f"project.type invalid: {cfg['project'].get('type')!r}")
     d = cfg["direction"]
     if not isinstance(d["window"], int) or not 5 <= d["window"] <= 500:
-        _err(path, f"direction.window out of [5,500]: {d['window']!r}")
+        E(f"direction.window out of [5,500]: {d['window']!r}")
     f = d["formula"]
     total = f["core_share"] + f["pillar_coverage"] + f["issue_factor"]
     if abs(total - 1.0) > 0.001:
-        _err(path, f"direction.formula weights must sum to 1.0 (got {total:.4f})")
+        E(f"direction.formula weights must sum to 1.0 (got {total:.4f})")
     t = d["thresholds"]
     if not 0 <= t["warning"] < t["healthy"] <= 100:
-        _err(path, f"direction.thresholds invalid: warning={t['warning']} healthy={t['healthy']}")
+        E(f"direction.thresholds invalid: warning={t['warning']} healthy={t['healthy']}")
     for name, cat in cfg["categories"].items():
-        cw = cat["weight"]
-        if not isinstance(cw, (int, float)) or not -1.0 <= cw <= 2.0:
-            _err(path, f"categories.{name}.weight out of [-1.0, 2.0]: {cw!r}")
+        if not isinstance(cat["weight"], (int, float)) or not -1.0 <= cat["weight"] <= 2.0:
+            E(f"categories.{name}.weight out of [-1.0, 2.0]: {cat['weight']!r}")
         for pat in cat["message_patterns"]:
-            try:
-                re.compile(pat)
-            except re.error as e:
-                _err(path, f"categories.{name}.message_patterns invalid regex {pat!r}: {e}")
+            try: re.compile(pat)
+            except re.error as e: E(f"categories.{name}.message_patterns invalid regex {pat!r}: {e}")
 
 
 def find_config(start: Path) -> Path | None:

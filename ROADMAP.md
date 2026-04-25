@@ -78,12 +78,17 @@ può sempre disattivare o skippare.
 
 **Scope:** identificare e riportare deriva in modo concreto.
 
-- [ ] `/compass:drift` — report dedicato con i segnali rilevati
-- [ ] Classificatore commit migliorato: euristica su path + keyword + AI
-      classification opzionale (costo controllato)
-- [ ] Soglia configurabile: sotto quale Direction Index emettiamo warning
-- [ ] Output "prossimo passo di riallineamento" — sempre il più piccolo
-      possibile, mai un macro-task
+- [x] `/compass:drift` — report dedicato con i segnali rilevati
+      (script `scripts/drift.py` + skill `compass-drift`)
+- [x] Classificatore commit migliorato: euristica su path + keyword
+      (prefisso messaggio già presente; aggiunto **body keyword
+      matching** per-categoria via `categories.*.body_keywords`).
+      AI classification opzionale rinviata a v0.5.0+ (costo controllato).
+- [x] Soglia configurabile: `[drift] warning_threshold` (default 50).
+      Sotto soglia, `/compass:drift` emette `⚠ DRIFT WARNING`.
+- [x] Output "prossimo passo di riallineamento" — `next_smallest_step`
+      sempre singolo, path-specifico, non macro-task. Nuovo recency
+      signal: "ultimo commit core N giorni fa (soglia drift Mgg)".
 
 **Criterio di done:** su un progetto con 2+ settimane di deriva (molti
 commit infra, zero commit core), `/compass:drift` produce un warning

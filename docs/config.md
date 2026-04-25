@@ -138,6 +138,16 @@ escape_env = "COMPASS_SKIP_BOOT" # nome env var che disabilita il hook
                                  # per la sessione corrente (qualsiasi
                                  # valore non vuoto skippa).
 
+# Drift — soglia warning + feature flag (v0.3.0+).
+[drift]
+warning_threshold = 50           # DI sotto questa soglia → /compass:drift
+                                 # emette warning. Range 0..100.
+                                 # Indipendente da direction.thresholds:
+                                 # quelle classificano (healthy/warning/
+                                 # deriva), questa è il trigger di alert.
+recency_days = 7                 # "ultimo commit core a > N giorni" è
+                                 # un drift signal. Default 7.
+
 # Forward-compat. v0.1.0+ legge ma ignora.
 [evolve]
 enabled = false                  # v0.4.0
@@ -196,11 +206,22 @@ Violazioni → `check` stampa errore specifico con riga TOML e esce non-zero.
   7. Fallback: `other`.
 - **Ignore**: i path che matchano `ignore` sono scartati prima del match.
 
-### 5.1 Segnale secondario: commit message prefix (opzionale)
+### 5.1 Segnale secondario: commit message prefix + body keywords (opzionale)
 
-Classificazione ibrida path + messaggio (stile semantic-release). Per ogni
-commit, se il prefisso del primo rigo messaggio matcha un pattern
-`message_patterns` di una categoria, si applica una regola di conferma.
+Classificazione ibrida path + messaggio. Per ogni commit, due segnali
+testuali aggiuntivi alla path-based:
+
+1. **Prefisso prima riga messaggio** (stile semantic-release). Per ogni
+   categoria, lista `message_patterns` di regex.
+2. **Body keywords** (v0.3.0+). Per ogni categoria, lista
+   `body_keywords` di parole/frasi case-insensitive cercate nel corpo
+   del commit (righe 2..N), non solo nella prima riga. Utile per
+   commit con messaggi tipo "fix: typo \\n\\n closes #42, related to
+   onboarding flow". I keyword corrispondenti riportano il commit alla
+   categoria associata anche quando path/prefisso non bastano.
+
+Per ogni commit, se prefisso o keyword matcha un pattern, si applica
+la regola di conferma:
 
 Regola:
 - Se la category dominante del commit (per score pesato dei file) **concorda**
