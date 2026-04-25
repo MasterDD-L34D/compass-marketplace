@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "compass",
+  "version": "0.0.1",
+  "description": "Direction-first audit lens for Claude Code projects. Measures how well recent work serves the project's pillars, surfaces drift, and runs adaptive kickoff protocols. Composes with claude-md-management, doctor-skill, and audit-project rather than duplicating them.",
+  "author": {
+    "name": "MasterDD-L34D"
+  },
+  "keywords": [
+    "audit",
+    "direction",
+    "pillars",
+    "drift",
+    "kickoff",
+    "evo-tactics"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/MasterDD-L34D/compass-marketplace"
+}
