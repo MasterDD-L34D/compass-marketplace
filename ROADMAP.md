@@ -31,16 +31,17 @@ Il principio ogni volta: **se non serve ancora, non costruirlo.**
 
 **Scope:** due comandi che dimostrano la lente.
 
-- [ ] `/compass:init` — interattivo, aiuta l'utente a definire 3–5 pilastri
+- [x] `/compass:init` — interattivo, aiuta l'utente a definire 3–5 pilastri
       nel progetto corrente. Scrive `.compass.toml`.
-- [ ] `/compass:check` — calcola il Direction Index basandosi su:
+- [x] `/compass:check` — calcola il Direction Index basandosi su:
     - ultimi N commit (classificati per categoria)
     - stato dei pilastri (ha file recenti?)
     - issue chiuse recenti (se `gh` è disponibile)
-- [ ] Schema di `.compass.toml` documentato in `docs/config.md`
+- [x] Schema di `.compass.toml` documentato in `docs/config.md`
 - [ ] Test manuale su 3 progetti diversi: Evo-Tactics (gaming), un SaaS di
-      esempio, un repo di docs
-- [ ] Skill `compass-lens` che Claude auto-invoca quando l'utente chiede
+      esempio, un repo di docs *(self-test su `compass-marketplace`
+      eseguito; cross-project rimane pendente)*
+- [x] Skill `compass-lens` che Claude auto-invoca quando l'utente chiede
       "dove sto andando", "sono sulla strada giusta", "check del progetto"
 
 **Criterio di done:** su un progetto con pilastri dichiarati, `/compass:check`

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Direction-first audit & kickoff lens for Claude Code projects. Born from Evo-Tactics design philosophy.",
-    "version": "0.0.1"
+    "version": "0.1.0"
   },
   "plugins": [
     {
@@ -15,7 +15,7 @@
         "source": "local",
         "path": "plugins/compass"
       },
-      "version": "0.0.1",
+      "version": "0.1.0",
       "description": "Direction Index + Pillars + Drift detection for any Claude Code project. Composes with existing audit plugins instead of duplicating them.",
       "category": "productivity",
       "keywords": [
