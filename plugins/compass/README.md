@@ -17,12 +17,13 @@ Composes with other audit plugins instead of duplicating them.
 
 ## Status
 
-**v0.3.0 — "Drift"**. Four slash commands + SessionStart hook:
+**v0.4.0 — "Evolve"**. Five slash commands + SessionStart hook:
 
 - `/compass:init` — interactive setup of `.compass.toml`
 - `/compass:check` — full Direction Index briefing
 - `/compass:boot` — 3-line mini-brief for kickoff
 - `/compass:drift` — focused drift report with warning gate
+- `/compass:evolve` — propose config changes from Claude Code transcripts
 - `SessionStart` hook — auto mini-brief on session open (opt-out via
   `boot.enabled = false` or `COMPASS_SKIP_BOOT=1`)
 
@@ -109,6 +110,21 @@ Up to 5 ranked drift signals (vs. 3 in `/compass:check`). Includes the
 v0.3.0 recency signal: "ultimo commit core N giorni fa (soglia drift
 Mgg)" using `drift.recency_days`.
 
+### `/compass:evolve`
+
+Reads `~/.claude/projects/<repo>/*.jsonl` transcripts and aggregates
+**counts only** (privacy: no content extracted) — sessions, total
+events, `compass` mentions, per-pillar mentions. Then proposes:
+
+- `drop_pillar`: pillar never mentioned in 5+ sessions
+- `boost_weight`: pillar dominates >50% of mentions, weight < 1.5
+- `add_paths_hint`: pillar under-mentioned vs avg
+- `noop`: balanced, no change
+
+**Never auto-applies**. User edits `.compass.toml` manually if they
+agree. Auto-apply (TOML writer + diff + interactive accept) deferred
+to v0.5.0+.
+
 ### `/compass:lens` (auto-invoked skill)
 
 Triggered by phrases like "am I on track", "where am I going", "check
@@ -121,9 +137,10 @@ verbatim.
 - `skills/compass-check/SKILL.md` — `/compass:check`
 - `skills/compass-boot/SKILL.md` — `/compass:boot`
 - `skills/compass-drift/SKILL.md` — `/compass:drift`
+- `skills/compass-evolve/SKILL.md` — `/compass:evolve`
 - `skills/compass-lens/SKILL.md` — auto-invoked lens
-- `scripts/{check,boot,drift,init}.py` — Python entry points called from
-  skills via shell injection (`${CLAUDE_PLUGIN_ROOT}/scripts/...`)
+- `scripts/{check,boot,drift,evolve,init}.py` — Python entry points
+  called from skills via shell injection (`${CLAUDE_PLUGIN_ROOT}/scripts/...`)
 - `hooks/hooks.json` — `SessionStart` hook → `boot.py --hook`
 - `lib/` — config parser, classifier, git reader, direction calculator,
   briefing renderer, runtime helpers
