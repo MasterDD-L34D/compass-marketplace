@@ -46,7 +46,7 @@ stabilità, perf, esempi.
 Il 90% dei progetti non le scrive mai. Le ha in testa, cambiano nel tempo,
 e quando il team cresce si perdono.
 
-Compass costringe a dichiararli in `.compass.yaml`. Questa è la prima
+Compass costringe a dichiararli in `.compass.toml`. Questa è la prima
 scoperta utile del tool: molti progetti si accorgono che non sanno
 **esattamente** cosa sono i loro pilastri finché non devono scriverli.
 
@@ -91,8 +91,8 @@ in maniera concreta per non essere fluffy:
 │  2. Hook SessionStart inietta un mini-brief         │
 │  3. Se il kickoff trova poco, logga "soft session"  │
 │  4. Se trova tanto, logga "hot session"             │
-│  5. Dopo N sessioni, /compass evolve propone        │
-│     modifiche a .compass.yaml:                      │
+│  5. Dopo N sessioni, /compass:evolve propone        │
+│     modifiche a .compass.toml:                      │
 │       → disabilita task che non trovano mai nulla   │
 │       → promuove task che trovano sempre issue      │
 │       → raffina pesi dei pilastri                   │
@@ -142,7 +142,7 @@ Traduzione universale in Compass:
 | **Tooling** | Script interni, generator, linter config | 0 |
 | **Other** | Tutto il resto | 0 |
 
-I pesi sono modificabili in `.compass.yaml`. Il default penalizza lievemente
+I pesi sono modificabili in `.compass.toml`. Il default penalizza lievemente
 l'infra dominante — è una scelta di game-design culture trasposta: se il
 tuo tempo scarseggia, l'infrastruttura è sempre tentazione.
 

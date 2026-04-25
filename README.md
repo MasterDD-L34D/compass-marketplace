@@ -64,7 +64,7 @@ milestone.
 /plugin install compass@compass-marketplace
 
 # Primo uso
-/compass init
+/compass:init
 ```
 
 Nella v0.0.1 corrente l'installazione funziona come test ma i comandi non
@@ -75,11 +75,11 @@ sono ancora implementati — parte dalla v0.1.0.
 ## Anteprima dei comandi (target)
 
 ```
-/compass init       → interattivo, definisce i pilastri del progetto
-/compass check      → Direction Index + stato pilastri (briefing <1 min)
-/compass boot       → kickoff direzionale: briefing + deleghe ai plugin giusti
-/compass drift      → cerca segnali di deriva nei commit/issue recenti
-/compass evolve     → legge i transcript, propone modifiche a .compass.yaml
+/compass:init       → interattivo, definisce i pilastri del progetto
+/compass:check      → Direction Index + stato pilastri (briefing <1 min)
+/compass:boot       → kickoff direzionale: briefing + deleghe ai plugin giusti
+/compass:drift      → cerca segnali di deriva nei commit/issue recenti
+/compass:evolve     → legge i transcript, propone modifiche a .compass.toml
 ```
 
 Plus un `SessionStart` hook opzionale che inietta un mini-brief all'apertura.

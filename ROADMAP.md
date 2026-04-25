@@ -31,19 +31,20 @@ Il principio ogni volta: **se non serve ancora, non costruirlo.**
 
 **Scope:** due comandi che dimostrano la lente.
 
-- [ ] `/compass init` — interattivo, aiuta l'utente a definire 3–5 pilastri
-      nel progetto corrente. Scrive `.compass.yaml`.
-- [ ] `/compass check` — calcola il Direction Index basandosi su:
+- [x] `/compass:init` — interattivo, aiuta l'utente a definire 3–5 pilastri
+      nel progetto corrente. Scrive `.compass.toml`.
+- [x] `/compass:check` — calcola il Direction Index basandosi su:
     - ultimi N commit (classificati per categoria)
     - stato dei pilastri (ha file recenti?)
     - issue chiuse recenti (se `gh` è disponibile)
-- [ ] Schema di `.compass.yaml` documentato in `docs/config.md`
+- [x] Schema di `.compass.toml` documentato in `docs/config.md`
 - [ ] Test manuale su 3 progetti diversi: Evo-Tactics (gaming), un SaaS di
-      esempio, un repo di docs
-- [ ] Skill `compass-lens` che Claude auto-invoca quando l'utente chiede
+      esempio, un repo di docs *(self-test su `compass-marketplace`
+      eseguito; cross-project rimane pendente)*
+- [x] Skill `compass-lens` che Claude auto-invoca quando l'utente chiede
       "dove sto andando", "sono sulla strada giusta", "check del progetto"
 
-**Criterio di done:** su un progetto con pilastri dichiarati, `/compass check`
+**Criterio di done:** su un progetto con pilastri dichiarati, `/compass:check`
 produce un briefing sotto i 60 secondi con numeri reali.
 
 **Stima:** un weekend.
@@ -54,12 +55,12 @@ produce un briefing sotto i 60 secondi con numeri reali.
 
 **Scope:** il comando di apertura sessione.
 
-- [ ] `/compass boot` — sostituisce il vecchio `/kickoff` con una versione
+- [ ] `/compass:boot` — sostituisce il vecchio `/kickoff` con una versione
       direction-aware
 - [ ] SessionStart hook opzionale, che inietta un mini-brief (3–5 righe)
       all'apertura di ogni sessione
 - [ ] Integrazione **opzionale** con `claude-md-management`: se installato
-      e se `.compass.yaml` lo permette, `boot` può chiederne l'invocazione
+      e se `.compass.toml` lo permette, `boot` può chiederne l'invocazione
 - [ ] Escape hatch `skip boot` rispettato
 
 **Criterio di done:** aprire una sessione dentro un progetto con Compass
@@ -74,7 +75,7 @@ può sempre disattivare o skippare.
 
 **Scope:** identificare e riportare deriva in modo concreto.
 
-- [ ] `/compass drift` — report dedicato con i segnali rilevati
+- [ ] `/compass:drift` — report dedicato con i segnali rilevati
 - [ ] Classificatore commit migliorato: euristica su path + keyword + AI
       classification opzionale (costo controllato)
 - [ ] Soglia configurabile: sotto quale Direction Index emettiamo warning
@@ -82,7 +83,7 @@ può sempre disattivare o skippare.
       possibile, mai un macro-task
 
 **Criterio di done:** su un progetto con 2+ settimane di deriva (molti
-commit infra, zero commit core), `/compass drift` produce un warning
+commit infra, zero commit core), `/compass:drift` produce un warning
 chiaro + il next-action più piccolo.
 
 **Stima:** mezza settimana.
@@ -96,7 +97,7 @@ chiaro + il next-action più piccolo.
 - [ ] Lettura di `~/.claude/projects/**/*.jsonl` filtrando per progetto corrente
 - [ ] Statistiche: quante volte ogni task del boot è stato eseguito, quante
       volte ha trovato qualcosa, quante volte è stato skippato
-- [ ] `/compass evolve` — presenta un **diff proposto** al `.compass.yaml`
+- [ ] `/compass:evolve` — presenta un **diff proposto** al `.compass.toml`
       basato sui pattern osservati
 - [ ] L'utente approva in modalità chirurgica (accept, reject, modify)
 - [ ] Mai applicare modifiche senza consenso esplicito
@@ -137,12 +138,12 @@ Compass li usa come subagent invece di replicare le loro funzioni.
     - [ ] Web SaaS (default: core funnel/perf/onboarding/reliability)
     - [ ] Research repo (default: experiments/data/writeup/reproducibility)
     - [ ] Library/SDK (default: API stability/examples/perf/compat)
-- [ ] `/compass init` può proporre il template giusto dopo aver ispezionato
+- [ ] `/compass:init` può proporre il template giusto dopo aver ispezionato
       il repo
 - [ ] Traduttore Evo-Tactics → progetto (tipo in `VISION.md` §5) esposto
-      come `/compass translate`
+      come `/compass:translate`
 
-**Criterio di done:** `/compass init` su un repo vanilla di qualsiasi tipo
+**Criterio di done:** `/compass:init` su un repo vanilla di qualsiasi tipo
 produce una config iniziale ragionevole in <2 minuti.
 
 **Stima:** 1 settimana.
