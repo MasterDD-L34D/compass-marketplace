@@ -74,12 +74,17 @@ Tutto il resto è UI sopra questi tre.
 
 | Componente | LOC max | Nota |
 |---|---|---|
-| Plugin Compass totale | 800 | Python + markdown comandi |
+| Plugin Compass totale (Python) | 1000 | scaglione: 800 v0.1.0, 1000 da v0.3.0 |
 | Singolo subagent | 100 righe | nel file `.md` |
 | Singolo skill | 150 righe | nel `SKILL.md` |
 | Singolo command | 80 righe | nel file `.md` |
 
 Oltre questi numeri = stai aggiungendo sistema. Fermati.
+
+**Storia del budget**: v0.1.0 fissava 800 LOC come design budget per
+"lente non sistema". v0.3.0 ha bumped a 1000 per coprire `/compass:drift`
++ classificazione body keywords + recency drift signals. Ulteriori bump
+richiedono giustificazione per milestone in commit message.
 
 ## Definition of done per ogni feature
 

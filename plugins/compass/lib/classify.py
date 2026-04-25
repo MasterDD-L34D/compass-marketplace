@@ -21,6 +21,7 @@ class FileHit:
 class CommitHit:
     sha: str
     message: str
+    ts: int = 0
     files: list[FileHit] = field(default_factory=list)
     dominant_category: str | None = None
     verified: bool = True
@@ -72,14 +73,20 @@ def classify_file(path: str, cfg: dict[str, Any]) -> FileHit:
 
 
 def _category_from_message(message: str, cfg: dict[str, Any]) -> str | None:
-    line = message.splitlines()[0] if message else ""
+    if not message:
+        return None
+    lines = message.splitlines()
+    head, body = lines[0], "\n".join(lines[1:]).lower()
     for cat_name in CATEGORY_ORDER:
-        for pat in cfg["categories"][cat_name]["message_patterns"]:
+        cat = cfg["categories"][cat_name]
+        for pat in cat["message_patterns"]:
             try:
-                if re.search(pat, line):
+                if re.search(pat, head):
                     return cat_name
             except re.error:
-                continue
+                pass
+        if body and any(kw and kw.lower() in body for kw in cat["body_keywords"]):
+            return cat_name
     return None
 
 
@@ -87,7 +94,8 @@ def classify_commit(commit: dict[str, Any], cfg: dict[str, Any]) -> CommitHit:
     """Classify commit's files + resolve dominant category + verify against message."""
     hits = [classify_file(f, cfg) for f in commit.get("files", [])
             if not is_ignored(f, cfg["ignore"])]
-    ch = CommitHit(sha=commit["sha"], message=commit.get("message", ""), files=hits)
+    ch = CommitHit(sha=commit["sha"], message=commit.get("message", ""),
+                   ts=int(commit.get("ts", 0)), files=hits)
     if not hits:
         return ch
     weights: dict[str, float] = {}
