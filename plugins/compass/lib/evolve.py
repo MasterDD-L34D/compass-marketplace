@@ -1,5 +1,5 @@
-"""Read Claude Code transcripts + aggregate stats + propose config changes.
-Spec: docs/config.md, ROADMAP v0.4.0. Privacy: only counts, no content extracted."""
+"""Read Claude Code transcripts, aggregate stats, propose config changes.
+Privacy: only counts, no content extracted. Spec: ROADMAP v0.4.0."""
 from __future__ import annotations
 
 import os
@@ -15,7 +15,7 @@ class EvolveStats:
     total_lines: int = 0
     compass_mentions: int = 0
     pillar_mentions: dict[str, int] = field(default_factory=dict)
-    transcript_dir: Path | None = None
+    transcript_dir: Path | None = None  # noqa
 
 
 def find_transcript_dir(repo: Path) -> Path | None:
@@ -36,7 +36,7 @@ def find_transcript_dir(repo: Path) -> Path | None:
 
 
 def aggregate(transcript_dir: Path, pillar_ids: list[str], limit_files: int = 20) -> EvolveStats:
-    """Count session files + lines + occurrences of pillar ids and 'compass' markers."""
+    """Count session files + lines + pillar ids + 'compass' markers."""
     stats = EvolveStats(transcript_dir=transcript_dir)
     pillar_re = re.compile(r"\b(" + "|".join(map(re.escape, pillar_ids)) + r")\b") if pillar_ids else None
     files = sorted(transcript_dir.glob("*.jsonl"),
@@ -44,16 +44,14 @@ def aggregate(transcript_dir: Path, pillar_ids: list[str], limit_files: int = 20
     stats.sessions = len(files)
     for f in files:
         try:
-            with f.open(encoding="utf-8", errors="replace") as fh:
-                for line in fh:
-                    stats.total_lines += 1
-                    low = line.lower()
-                    if "compass" in low:
-                        stats.compass_mentions += 1
-                    if pillar_re:
-                        for m in pillar_re.finditer(line):
-                            pid = m.group(1)
-                            stats.pillar_mentions[pid] = stats.pillar_mentions.get(pid, 0) + 1
+            for line in f.open(encoding="utf-8", errors="replace"):
+                stats.total_lines += 1
+                if "compass" in line.lower():
+                    stats.compass_mentions += 1
+                if pillar_re:
+                    for m in pillar_re.finditer(line):
+                        pid = m.group(1)
+                        stats.pillar_mentions[pid] = stats.pillar_mentions.get(pid, 0) + 1
         except OSError:
             continue
     return stats
@@ -62,18 +60,17 @@ def aggregate(transcript_dir: Path, pillar_ids: list[str], limit_files: int = 20
 @dataclass
 class Proposal:
     kind: str          # 'drop_pillar' | 'boost_weight' | 'add_paths_hint' | 'noop'
-    target: str        # pillar id or section name
+    target: str
     reason: str
-    suggestion: str    # human-readable action
+    suggestion: str
 
 
 def propose(stats: EvolveStats, cfg: dict[str, Any]) -> list[Proposal]:
     """Compute proposals from stats + current config. Conservative: zero or few suggestions."""
     out: list[Proposal] = []
     if stats.sessions < 3:
-        out.append(Proposal("noop", "*",
-                            f"Solo {stats.sessions} sessione/i registrate.",
-                            "Continua a usare Compass; rieseguire `/compass:evolve` dopo 5+ sessioni."))
+        out.append(Proposal("noop", "*", f"Solo {stats.sessions} sessione/i registrate.",
+                            "Continua a usare Compass; ri-eseguire dopo 5+ sessioni."))
         return out
     pillars = {p["id"]: p for p in cfg["pillars"]}
     mentions = stats.pillar_mentions
@@ -82,21 +79,20 @@ def propose(stats: EvolveStats, cfg: dict[str, Any]) -> list[Proposal]:
     for pid, p in pillars.items():
         m = mentions.get(pid, 0)
         share = m / total_m
+        w = p.get("weight", 1.0)
         if m == 0 and stats.sessions >= 5:
             out.append(Proposal("drop_pillar", pid,
-                                f"`{pid}` non menzionato in {stats.sessions} sessioni.",
-                                f"Considera rimuovere il pilastro `{pid}` da `.compass.toml`."))
-        elif share > 0.5 and p.get("weight", 1.0) < 1.5 and len(pillars) > 1:
+                f"`{pid}` non menzionato in {stats.sessions} sessioni.",
+                f"Considera rimuovere `{pid}` da `.compass.toml`."))
+        elif share > 0.5 and w < 1.5 and len(pillars) > 1:
             out.append(Proposal("boost_weight", pid,
-                                f"`{pid}` domina ({share*100:.0f}% delle menzioni).",
-                                f"Considera alzare `weight` di `{pid}` "
-                                f"da {p.get('weight', 1.0)} a {min(2.0, p.get('weight', 1.0) + 0.5)}."))
+                f"`{pid}` domina ({share*100:.0f}% delle menzioni).",
+                f"Considera alzare `weight` di `{pid}` da {w} a {min(2.0, w + 0.5)}."))
         elif m < avg * 0.3 and stats.sessions >= 5:
             out.append(Proposal("add_paths_hint", pid,
-                                f"`{pid}` ha solo {m} menzioni vs media {avg:.1f}.",
-                                f"Verifica i `paths` di `{pid}`: forse troppo restrittivi."))
+                f"`{pid}` ha solo {m} menzioni vs media {avg:.1f}.",
+                f"Verifica i `paths` di `{pid}`: forse troppo restrittivi."))
     if not out:
-        out.append(Proposal("noop", "*",
-                            "Pattern di uso bilanciato sui pilastri dichiarati.",
+        out.append(Proposal("noop", "*", "Pattern di uso bilanciato sui pilastri.",
                             "Nessuna modifica suggerita. Continua."))
     return out

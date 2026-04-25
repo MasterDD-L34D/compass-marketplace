@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = 1
-VALID_PROJECT_TYPES = {"game-dev", "web-saas", "research", "library", "docs", "other"}
+VALID_PROJECT_TYPES = {"game-dev", "web-saas", "research", "library", "docs",
+                       "multi-agent", "other"}
 PILLAR_ID_RE = re.compile(r"^[a-z][a-z0-9-]{1,40}$")
 
 
