@@ -105,5 +105,15 @@ def classify_commit(commit: dict[str, Any], cfg: dict[str, Any]) -> CommitHit:
     ch.dominant_category = max(weights.items(), key=lambda kv: kv[1])[0]
     msg_cat = _category_from_message(ch.message, cfg)
     if msg_cat is not None and msg_cat != ch.dominant_category:
-        ch.verified = False
+        # docs + core is a legitimate co-occurrence when the mismatch comes entirely
+        # from pillar-tagged .md files: those are both docs (form) and core (semantic
+        # mapping) by design. Flag only genuine category conflicts.
+        pillar_md_only = (
+            msg_cat == "docs"
+            and ch.dominant_category == "core"
+            and any(h.category.startswith("pillar:") for h in hits)
+            and all(h.path.endswith(".md") for h in hits if h.category.startswith("pillar:"))
+        )
+        if not pillar_md_only:
+            ch.verified = False
     return ch
